@@ -5,10 +5,11 @@ console.log("User Name - " ,process.env.SPOTIFY_ID);
 console.log("User Name - " ,process.env.SPOTIFY_SECRET);
 
 var getTask = process.argv[2];
-var getSearch = process.argv[3];
+var getSearch = process.argv;
+//var movieQry = "";
 
 var getSpotifyKey = require("./key.js");
-var axios = require("axios");
+//var axios = require("axios");
 var request = require("request");
 
 
@@ -29,7 +30,7 @@ switch (getTask){
 //        callBandsInTownAPI(getSearch);
 //        break;
     case "movie-this":
-        callimdbAPI(getSearch);
+        callomdbAPI(getSearch);
         break;
     //case "do-what-it-says":
         
@@ -37,10 +38,12 @@ switch (getTask){
         
 
 function callSpotifyAPI(searchqry){
+
+    
     spotify.search({
     type: "track",
     query : "Ace of Base The Sign",
-    limit : 1
+    limit : 20
     
 }).then(function(res){
     //console.log(res.tracks.items[0].artists[0].name);
@@ -79,23 +82,47 @@ function callSpotifyAPI(searchqry){
 }
 
 
-function callimdbAPI(searchqry){
-    var splitQry = searchqry.split(" ");
-    var movieQry;
-    for(i=0;i<splitQry.length;i++) {
-     if(i !=splitQry.length-1){   
-         movieQry += splitQry[i] + "+";
+function callomdbAPI(searchqry){
+   // var splitQry = searchqry.split(" ");
+    var movieQry = "";
+    for(i=3;i<searchqry.length;i++){
+    if(i != searchqry.length-1){   
+         movieQry += searchqry[i] + "+";
+         //console.log(movieQry);
      } else {
-         movieQry += splitQry[i]
+         movieQry += searchqry[i]
+         //console.log("else", movieQry);
      };
+    };
+    
+request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", function (error, response, body) {
+  console.log('error:', error); // Print the error if one occurred
+  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+ // console.log(body); // Print the HTML for the Google homepage.
+    var parseBody = JSON.parse(body);
+    var rottenRatings = "";
+  //console.log(response)
+  console.log("Title-" ,parseBody.Title);
+  console.log("Year-" ,parseBody.Year);
+    console.log("Country-" ,parseBody.Country);
+    console.log("Language-" ,parseBody.Language);
+    console.log("Actors-" ,parseBody.Actors);
+  console.log("imdbRating-" ,parseBody["imdbRating"]);
+  console.log("Plot-" ,parseBody.Plot);
+    for(i=0;i<parseBody.Ratings.length;i++){
+        if(parseBody.Ratings[i].Source == "Rotten Tomatoes") {
+            rottenRatings = parseBody.Ratings;
+        }
+    }
+    if(rottenRatings){
+        console.log("Rotten Tomatoes-",parseBody.Ratings);
+    } else {
+        console.log("Rotten Tomatoes- No ratings found");
     }
     
-    request.get("http://www.omdbapi.com/?t=" + movieQry + "&plot=short&apikey=trilogy").then(
-      function(response) {
-        console.log(response.data.Title);
-        console.log(response.data.Year);
-        console.log(response.data.imdbRating);
-      }
-);
+    
+    
+  
+});
     
 }
