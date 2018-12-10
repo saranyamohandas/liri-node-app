@@ -12,6 +12,7 @@ var getSearch = process.argv;
 var getSpotifyKey = require("./key.js");
 //var axios = require("axios");
 var request = require("request");
+var moment = require("moment");
 
 
 var fs = require("fs");
@@ -22,7 +23,7 @@ var spotify = new Spotify({
 });
 
 console.log("getTask-",getTask + "getSearch-",getSearch);
-//console.log(getKey.spotify.id)
+//get user input and call appropriate functionality
 switch (getTask){
     case "spotify-this-song":
         console.log("callSpotifyAPI")
@@ -39,11 +40,14 @@ switch (getTask){
         
 }
         
-
+// Spotify API functionality
 function callSpotifyAPI(searchqry){
     var trackQry = "";
     var trackMatch = false;
-    for(i=3;i<searchqry.length;i++){
+    if(!searchqry[3]){
+        trackQry = "Mr. Nobody";
+    } else {
+        for(i=3;i<searchqry.length;i++){
         if(i != searchqry.length-1){   
              trackQry += searchqry[i] + " ";
              //console.log(movieQry);
@@ -52,6 +56,9 @@ function callSpotifyAPI(searchqry){
              //console.log("else", movieQry);
          };
     };
+        
+    }
+    
     console.log("trackQry-" ,trackQry);
     
     spotify.search({
@@ -64,30 +71,9 @@ function callSpotifyAPI(searchqry){
 //    console.log(res.tracks.items[0].artists);
     console.log("search query -",res.tracks.href)
     var getItems = res.tracks.items;
-   // console.log(res.tracks.items[0].album);
-   // console.log(res.tracks.items)
-    //Artist name
-//    console.log("Artist:",res.tracks.items[8].artists[0].name);
-//    //Song preview 
-//    console.log("Preview URL",res.tracks.items[8].preview_url)
-//    //Song name 
-//    console.log("Song Name:",res.tracks.items[8].name)
-//    //Album name 
-//    console.log("Album:",res.tracks.items[8].album.name)
-       // console.log(getItems);
-    //console.log("i-" + i, getItems[i].artists[0].name);
-             //Artist name
-//            console.log("Artist:",getItems[0].artists[0].name);
-//            //Song preview 
-//            console.log("Preview URL",getItems[0].preview_url)
-//            //Song name 
-//            console.log("Song Name:",getItems[0].name)
-//            //Album name 
-//            console.log("Album:",getItems[0].album.name)
+
     for(i=0;i<getItems.length;i++){
-        //console.log("len-",getItems.length)
-        //console.log(getItems[i].name.toLowerCase());
-        //console.log(trackQry.toLowerCase());
+        
         if(getItems[i].name.toLowerCase() == trackQry.toLowerCase()){
             console.log("i-" + i, getItems[i].artists[0].name);
              //Artist name
@@ -109,11 +95,12 @@ function callSpotifyAPI(searchqry){
     
 }
 
+// Bands in town API functionality
 function callBandsInTownAPI(searchqry){
     var artistQry = "";
     for(i=3;i<searchqry.length;i++){
         if(i != searchqry.length-1){   
-             artistQry += searchqry[i] + "+";
+             artistQry += searchqry[i] + " ";
              //console.log(movieQry);
          } else {
              artistQry += searchqry[i]
@@ -121,49 +108,28 @@ function callBandsInTownAPI(searchqry){
          };
     };
     
-request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", function (error, response, body) {
+request("https://rest.bandsintown.com/artists/" + artistQry + "/events?app_id=codingbootcamp", function (error, response, body) {
   console.log('error:', error); // Print the error if one occurred
   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
  // console.log(body); // Print the HTML for the Google homepage.
-    var parseBody = JSON.parse(body);
-    var rottenRatings = "";
-  //console.log(response)
-  console.log("Title-" ,parseBody.Title);
-  console.log("Year-" ,parseBody.Year);
-    console.log("Country-" ,parseBody.Country);
-    console.log("Language-" ,parseBody.Language);
-    console.log("Actors-" ,parseBody.Actors);
-  console.log("imdbRating-" ,parseBody["imdbRating"]);
-  console.log("Plot-" ,parseBody.Plot);
+     var concertRes = JSON.parse(body);
+    console.log(concertRes.length)
     
-    for(i=0;i<parseBody.Ratings.length;i++){
-        
-        if(parseBody.Ratings[i].Source == "Rotten Tomatoes") {
-            rottenRatings = parseBody.Ratings[i].Value;
-            break;
-        }
-    }
-   
-    if(rottenRatings){
-        console.log("Rotten Tomatoes-",rottenRatings);
-    } else {
-        console.log("Rotten Tomatoes- No ratings found");
-    }
+    console.log("Name of the venue : ",concertRes[0].venue.name);
+    console.log("Venue location : ",concertRes[0].venue.city + "," +  concertRes[0].venue.region +","+ concertRes[0].venue.country );
+    console.log("Date of the Event : " , moment(concertRes[0].datetime).format("L"));
+//     console.log("Name of the venue : ",body.name);
+//     console.log("Name of the venue : ",body.name);
+  
+    
 });
     
 }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-}
 
+
+
+
+//Omdb API functionality
 function callomdbAPI(searchqry){
    // var splitQry = searchqry.split(" ");
     var movieQry = "";
