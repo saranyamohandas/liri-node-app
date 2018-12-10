@@ -4,58 +4,72 @@ console.log("User Name - " ,process.env.USERNAME);
 console.log("User Name - " ,process.env.SPOTIFY_ID);
 console.log("User Name - " ,process.env.SPOTIFY_SECRET);
 
-var getTask = process.argv[2];
-var getSearch = process.argv;
-//var movieQry = "";
 
 
+// import dependent modules
 var getSpotifyKey = require("./key.js");
-//var axios = require("axios");
 var request = require("request");
 var moment = require("moment");
-
-
 var fs = require("fs");
 var Spotify = require('node-spotify-api');
+
+// declare variables
+var getTask = process.argv[2];
+var getSearch = process.argv.slice(3);
+var randomTask = false;
+var randomQry = "";
+// get spotify id and secret key
 var spotify = new Spotify({
   id: getSpotifyKey.spotify.id,
   secret: getSpotifyKey.spotify.secret
 });
 
 console.log("getTask-",getTask + "getSearch-",getSearch);
-//get user input and call appropriate functionality
-switch (getTask){
+
+//validate user input and call appropriate functionality
+function callAPI(checkTask){
+    
+    switch (checkTask){
     case "spotify-this-song":
-        console.log("callSpotifyAPI")
+        console.log("Spotify API called");
         callSpotifyAPI(getSearch);
-        
         break;
     case "concert-this":
+        console.log("Bans in Town API called");
         callBandsInTownAPI(getSearch);
         break;
     case "movie-this":
+        console.log("Omdb API called");
         callomdbAPI(getSearch);
         break;
-    //case "do-what-it-says":
-        
+    case "do-what-it-says":
+        callRandom(getSearch);
+    }
+    
 }
+
         
 // Spotify API functionality
 function callSpotifyAPI(searchqry){
     var trackQry = "";
-    var trackMatch = false;
-    if(!searchqry[3]){
-        trackQry = "Mr. Nobody";
+    
+    if(!searchqry && !randomTask){
+        trackQry = "The Sign";
+    } else if(randomTask){
+        trackQry = 
+        
     } else {
-        for(i=3;i<searchqry.length;i++){
-        if(i != searchqry.length-1){   
-             trackQry += searchqry[i] + " ";
-             //console.log(movieQry);
-         } else {
-             trackQry += searchqry[i]
-             //console.log("else", movieQry);
-         };
-    };
+          searchqry.join(" ")
+//        var getQry = buildQry();
+//        for(i=3;i<searchqry.length;i++){
+//        if(i != searchqry.length-1){   
+//             trackQry += searchqry[i] + " ";
+//             //console.log(movieQry);
+//         } else {
+//             trackQry += searchqry[i]
+//             //console.log("else", movieQry);
+//         };
+//    };
         
     }
     
@@ -69,7 +83,7 @@ function callSpotifyAPI(searchqry){
 }).then(function(res){
     //console.log(res.tracks.items[0].artists[0].name);
 //    console.log(res.tracks.items[0].artists);
-    console.log("search query -",res.tracks.href)
+   
     var getItems = res.tracks.items;
 
     for(i=0;i<getItems.length;i++){
@@ -97,31 +111,26 @@ function callSpotifyAPI(searchqry){
 
 // Bands in town API functionality
 function callBandsInTownAPI(searchqry){
-    var artistQry = "";
-    for(i=3;i<searchqry.length;i++){
-        if(i != searchqry.length-1){   
-             artistQry += searchqry[i] + " ";
-             //console.log(movieQry);
-         } else {
-             artistQry += searchqry[i]
-             //console.log("else", movieQry);
-         };
-    };
     
+    if(!searchqry){
+        artistQry = ""; //check requirement
+    } else {
+        searchqry.join(" ")
+        //var artistQry = buildQry(searchqry);
+    }
+    
+// API call using request   
 request("https://rest.bandsintown.com/artists/" + artistQry + "/events?app_id=codingbootcamp", function (error, response, body) {
   console.log('error:', error); // Print the error if one occurred
   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
- // console.log(body); // Print the HTML for the Google homepage.
-     var concertRes = JSON.parse(body);
+ 
+    var concertRes = JSON.parse(body);
     console.log(concertRes.length)
     
     console.log("Name of the venue : ",concertRes[0].venue.name);
     console.log("Venue location : ",concertRes[0].venue.city + "," +  concertRes[0].venue.region +","+ concertRes[0].venue.country );
     console.log("Date of the Event : " , moment(concertRes[0].datetime).format("L"));
-//     console.log("Name of the venue : ",body.name);
-//     console.log("Name of the venue : ",body.name);
-  
-    
+
 });
     
 }
@@ -133,30 +142,37 @@ request("https://rest.bandsintown.com/artists/" + artistQry + "/events?app_id=co
 function callomdbAPI(searchqry){
    // var splitQry = searchqry.split(" ");
     var movieQry = "";
-    for(i=3;i<searchqry.length;i++){
+    
+    //if no movie is mentioned default to Mr.Nobody
+    if(!searchqry[3]){ 
+        movieQry = "Mr.Nobody";
+    } else { //build search string for movie
+        for(i=3;i<searchqry.length;i++){
         if(i != searchqry.length-1){   
              movieQry += searchqry[i] + "+";
              //console.log(movieQry);
          } else {
              movieQry += searchqry[i]
-             //console.log("else", movieQry);
+             
          };
-    };
+        };
+    }
     
+// API call using request   
 request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", function (error, response, body) {
-  console.log('error:', error); // Print the error if one occurred
-  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
- // console.log(body); // Print the HTML for the Google homepage.
+    console.log('error:', error); // Print the error if one occurred
+    console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+ 
     var parseBody = JSON.parse(body);
     var rottenRatings = "";
-  //console.log(response)
-  console.log("Title-" ,parseBody.Title);
-  console.log("Year-" ,parseBody.Year);
+
+    console.log("Title-" ,parseBody.Title);
+    console.log("Year-" ,parseBody.Year);
     console.log("Country-" ,parseBody.Country);
     console.log("Language-" ,parseBody.Language);
     console.log("Actors-" ,parseBody.Actors);
-  console.log("imdbRating-" ,parseBody["imdbRating"]);
-  console.log("Plot-" ,parseBody.Plot);
+    console.log("imdbRating-" ,parseBody["imdbRating"]);
+    console.log("Plot-" ,parseBody.Plot);
     
     for(i=0;i<parseBody.Ratings.length;i++){
         
@@ -172,5 +188,36 @@ request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", fu
         console.log("Rotten Tomatoes- No ratings found");
     }
 });
+}
+
+function callRandom(){
+    fs.readFile("random.txt","uft8",function(err,data){
+            if(err){
+                return console.log(err)
+            }
+            var getData = data.split(",");
+            randomTask = true;
+            randomQry = getData[1];
+            callAPI(getData[0]);
+    }
+
+
+// build search string for track/bands search
+function buildQry(arr){
+    var resQry = "";
+    for(i=3;i<arr.length;i++){
+        if(i != arr.length-1){   
+             resQry += arr[i] + " ";
+             //console.log(movieQry);
+         } else {
+             resQry += arr[i];
+             //console.log("else", movieQry);
+         };
+    };
+    return resQry;
     
+}
+//call API check functionality
+if(getTask){
+    callAPI(getTask);
 }
