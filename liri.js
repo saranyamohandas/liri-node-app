@@ -8,6 +8,7 @@ var getTask = process.argv[2];
 var getSearch = process.argv;
 //var movieQry = "";
 
+
 var getSpotifyKey = require("./key.js");
 //var axios = require("axios");
 var request = require("request");
@@ -24,7 +25,9 @@ console.log("getTask-",getTask + "getSearch-",getSearch);
 //console.log(getKey.spotify.id)
 switch (getTask){
     case "spotify-this-song":
+        console.log("callSpotifyAPI")
         callSpotifyAPI(getSearch);
+        
         break;
 //    case "concert-this":
 //        callBandsInTownAPI(getSearch);
@@ -38,12 +41,23 @@ switch (getTask){
         
 
 function callSpotifyAPI(searchqry){
-
+    var trackQry = "";
+    var trackMatch = false;
+    for(i=3;i<searchqry.length;i++){
+        if(i != searchqry.length-1){   
+             trackQry += searchqry[i] + " ";
+             //console.log(movieQry);
+         } else {
+             trackQry += searchqry[i]
+             //console.log("else", movieQry);
+         };
+    };
+    console.log("trackQry-" ,trackQry);
     
     spotify.search({
     type: "track",
-    query : "Ace of Base The Sign",
-    limit : 20
+    query : trackQry
+    //limit : 1
     
 }).then(function(res){
     //console.log(res.tracks.items[0].artists[0].name);
@@ -60,10 +74,21 @@ function callSpotifyAPI(searchqry){
 //    console.log("Song Name:",res.tracks.items[8].name)
 //    //Album name 
 //    console.log("Album:",res.tracks.items[8].album.name)
-    
+       // console.log(getItems);
+    //console.log("i-" + i, getItems[i].artists[0].name);
+             //Artist name
+//            console.log("Artist:",getItems[0].artists[0].name);
+//            //Song preview 
+//            console.log("Preview URL",getItems[0].preview_url)
+//            //Song name 
+//            console.log("Song Name:",getItems[0].name)
+//            //Album name 
+//            console.log("Album:",getItems[0].album.name)
     for(i=0;i<getItems.length;i++){
-        console.log(getItems[i].artists[0].name)
-        if(getItems[i].artists[0].name == "Ace of Base"){
+        //console.log("len-",getItems.length)
+        //console.log(getItems[i].name.toLowerCase());
+        //console.log(trackQry.toLowerCase());
+        if(getItems[i].name.toLowerCase() == trackQry.toLowerCase()){
             console.log("i-" + i, getItems[i].artists[0].name);
              //Artist name
             console.log("Artist:",getItems[i].artists[0].name);
@@ -73,6 +98,9 @@ function callSpotifyAPI(searchqry){
             console.log("Song Name:",getItems[i].name)
             //Album name 
             console.log("Album:",getItems[i].album.name)
+            //trackMatch = true;
+            //console.log(i);
+            break;
         }
         
         
@@ -86,13 +114,13 @@ function callomdbAPI(searchqry){
    // var splitQry = searchqry.split(" ");
     var movieQry = "";
     for(i=3;i<searchqry.length;i++){
-    if(i != searchqry.length-1){   
-         movieQry += searchqry[i] + "+";
-         //console.log(movieQry);
-     } else {
-         movieQry += searchqry[i]
-         //console.log("else", movieQry);
-     };
+        if(i != searchqry.length-1){   
+             movieQry += searchqry[i] + "+";
+             //console.log(movieQry);
+         } else {
+             movieQry += searchqry[i]
+             //console.log("else", movieQry);
+         };
     };
     
 request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", function (error, response, body) {
