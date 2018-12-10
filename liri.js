@@ -29,9 +29,9 @@ switch (getTask){
         callSpotifyAPI(getSearch);
         
         break;
-//    case "concert-this":
-//        callBandsInTownAPI(getSearch);
-//        break;
+    case "concert-this":
+        callBandsInTownAPI(getSearch);
+        break;
     case "movie-this":
         callomdbAPI(getSearch);
         break;
@@ -109,6 +109,60 @@ function callSpotifyAPI(searchqry){
     
 }
 
+function callBandsInTownAPI(searchqry){
+    var artistQry = "";
+    for(i=3;i<searchqry.length;i++){
+        if(i != searchqry.length-1){   
+             artistQry += searchqry[i] + "+";
+             //console.log(movieQry);
+         } else {
+             artistQry += searchqry[i]
+             //console.log("else", movieQry);
+         };
+    };
+    
+request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", function (error, response, body) {
+  console.log('error:', error); // Print the error if one occurred
+  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+ // console.log(body); // Print the HTML for the Google homepage.
+    var parseBody = JSON.parse(body);
+    var rottenRatings = "";
+  //console.log(response)
+  console.log("Title-" ,parseBody.Title);
+  console.log("Year-" ,parseBody.Year);
+    console.log("Country-" ,parseBody.Country);
+    console.log("Language-" ,parseBody.Language);
+    console.log("Actors-" ,parseBody.Actors);
+  console.log("imdbRating-" ,parseBody["imdbRating"]);
+  console.log("Plot-" ,parseBody.Plot);
+    
+    for(i=0;i<parseBody.Ratings.length;i++){
+        
+        if(parseBody.Ratings[i].Source == "Rotten Tomatoes") {
+            rottenRatings = parseBody.Ratings[i].Value;
+            break;
+        }
+    }
+   
+    if(rottenRatings){
+        console.log("Rotten Tomatoes-",rottenRatings);
+    } else {
+        console.log("Rotten Tomatoes- No ratings found");
+    }
+});
+    
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+}
 
 function callomdbAPI(searchqry){
    // var splitQry = searchqry.split(" ");
@@ -137,20 +191,20 @@ request("http://www.omdbapi.com/?t=" +movieQry+ "&plot=short&apikey=trilogy", fu
     console.log("Actors-" ,parseBody.Actors);
   console.log("imdbRating-" ,parseBody["imdbRating"]);
   console.log("Plot-" ,parseBody.Plot);
+    
     for(i=0;i<parseBody.Ratings.length;i++){
+        
         if(parseBody.Ratings[i].Source == "Rotten Tomatoes") {
-            rottenRatings = parseBody.Ratings;
+            rottenRatings = parseBody.Ratings[i].Value;
+            break;
         }
     }
+   
     if(rottenRatings){
-        console.log("Rotten Tomatoes-",parseBody.Ratings);
+        console.log("Rotten Tomatoes-",rottenRatings);
     } else {
         console.log("Rotten Tomatoes- No ratings found");
     }
-    
-    
-    
-  
 });
     
 }
